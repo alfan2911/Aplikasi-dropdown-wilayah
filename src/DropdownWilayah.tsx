@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { BsArrowRepeat } from "react-icons/bs";
 
 type Province = {
   id: string;
@@ -23,16 +24,22 @@ const DropdownWilayah: React.FC = () => {
   const [selectedProvince, setSelectedProvince] = useState<string>("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedSubdistrict, setSelectedSubdistrict] = useState<string>("");
+  const [loadingProvince, setLoadingProvince] = useState<boolean>(false);
+  const [loadingDistrict, setLoadingDistrict] = useState<boolean>(false);
+  const [loadingSubdistrict, setLoadingSubdistrict] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingProvince(true);
         const response = await axios.get(
           "https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json"
         );
         setProvinces(response.data);
       } catch (error) {
         console.error("Error fetching provinces", error);
+      } finally {
+        setLoadingProvince(false);
       }
     };
 
@@ -43,12 +50,15 @@ const DropdownWilayah: React.FC = () => {
     const fetchDistricts = async () => {
       if (selectedProvince) {
         try {
+          setLoadingDistrict(true);
           const response = await axios.get(
             `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProvince}.json`
           );
           setDistricts(response.data);
         } catch (error) {
           console.error("Error fetching districts", error);
+        } finally {
+          setLoadingDistrict(false);
         }
       }
     };
@@ -60,12 +70,15 @@ const DropdownWilayah: React.FC = () => {
     const fetchSubdistricts = async () => {
       if (selectedDistrict) {
         try {
+          setLoadingSubdistrict(true);
           const response = await axios.get(
             `https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selectedDistrict}.json`
           );
           setSubdistricts(response.data);
         } catch (error) {
           console.error("Error fetching subdistricts", error);
+        } finally {
+          setLoadingSubdistrict(false);
         }
       }
     };
@@ -81,7 +94,11 @@ const DropdownWilayah: React.FC = () => {
           <select
             className="form-select"
             value={selectedProvince}
-            onChange={(e) => setSelectedProvince(e.target.value)}
+            onChange={(e) => {
+              setSelectedProvince(e.target.value);
+              setSelectedDistrict("");
+              setSelectedSubdistrict("");
+            }}
           >
             <option value="" className="fw-bold">Select Provinces</option>
             {provinces.map((province) => (
@@ -90,39 +107,49 @@ const DropdownWilayah: React.FC = () => {
               </option>
             ))}
           </select>
+          {loadingProvince && <BsArrowRepeat className="ml-2 animate-spin" />}
         </div>
 
-        <div className="mb-3">
-          <label className="fw-bold d-flex mb-2">Regencies</label>
-          <select
-            className="form-select"
-            value={selectedDistrict}
-            onChange={(e) => setSelectedDistrict(e.target.value)}
-          >
-            <option value="" className="fw-bold">Select Regencies</option>
-            {districts.map((district) => (
-              <option key={district.id} value={district.id}>
-                {district.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {selectedProvince && !loadingProvince && (
+          <div className="mb-3">
+            <label className="fw-bold d-flex mb-2">Regencies</label>
+            <select
+              className="form-select"
+              value={selectedDistrict}
+              onChange={(e) => {
+                setSelectedDistrict(e.target.value);
+                setSelectedSubdistrict("");
+              }}
+            >
+              <option value="" className="fw-bold">Select Regencies</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </select>
+            {loadingDistrict && <BsArrowRepeat className="ml-2 animate-spin" />}
+          </div>
+        )}
 
-        <div className="mb-3">
-          <label className="fw-bold d-flex mb-2">Subdistricts</label>
-          <select
-            className="form-select"
-            value={selectedSubdistrict}
-            onChange={(e) => setSelectedSubdistrict(e.target.value)}
-          >
-            <option value="" className="fw-bold">Select Subdistricts</option>
-            {subdistricts.map((subdistrict) => (
-              <option key={subdistrict.id} value={subdistrict.id}>
-                {subdistrict.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {selectedDistrict && !loadingDistrict && (
+          <div className="mb-3">
+            <label className="fw-bold d-flex mb-2">Subdistricts</label>
+            <select
+              className="form-select"
+              value={selectedSubdistrict}
+              onChange={(e) => setSelectedSubdistrict(e.target.value)}
+            >
+              <option value="" className="fw-bold">Select Subdistricts</option>
+              {subdistricts.map((subdistrict) => (
+                <option key={subdistrict.id} value={subdistrict.id}>
+                  {subdistrict.name}
+                </option>
+              ))}
+            </select>
+            {loadingSubdistrict && <BsArrowRepeat className="ml-2 animate-spin" />}
+          </div>
+        )}
       </div>
     </>
   );
